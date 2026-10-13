@@ -300,11 +300,11 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
 
     <div class="card reserve">
       <div class="label">Quỹ dự phòng</div>
-      <h2 style="margin-top:2px">Quỹ tiết kiệm phụ</h2>
+      <h2 style="margin-top:2px">Quỹ khẩn cấp</h2>
       <div class="therm-wrap">
         <div class="therm" id="therm"></div>
         <div class="therm-side">
-          <div class="xp-amount num" style="font-size:30px"><span id="resTxt">500,00 €</span> <span class="of">/ 500,00 € còn lại</span></div>
+          <div class="xp-amount num" style="font-size:30px"><span id="resTxt">250,00 €</span> <span class="of">/ 250,00 € còn lại</span></div>
           <div><span class="chip" id="resMood">Còn nóng hổi</span></div>
           <form id="resForm" novalidate class="res-form">
             <div class="field"><label for="resAmt">Số tiền đã chi từ quỹ</label><div class="money"><input id="resAmt" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0,00"></div></div>
@@ -726,13 +726,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ddel]");if
   armedD=null;const[fund,id]=dk.split(":");state.deposits[fund]=(state.deposits[fund]||[]).filter(x=>x.id!==id);persistDeposits();renderQuest();toast("Đã xoá");});
 
 /* ---------------- reserve fund (thermometer) ---------------- */
-const RESERVE=500;
+const RESERVE=250;
 let armedR=null, armRTimer=null;
 function thermColor(r){return "hsl("+Math.round(205+145*r)+" 90% 62%)";}
 function thermSVG(left){
   const r=Math.max(0,Math.min(1,left/RESERVE)), col=thermColor(r), top=14, h=190, x=26, w=30, cx=x+w/2, by=top+h+34;
-  let s='<svg viewBox="0 0 110 262" width="110" height="262" role="img" aria-label="Nhiệt kế quỹ phụ: còn '+eur(left)+'">';
-  for(let v=0;v<=RESERVE;v+=100){const y=top+h-(v/RESERVE)*h;
+  let s='<svg viewBox="0 0 110 262" width="110" height="262" role="img" aria-label="Nhiệt kế quỹ khẩn cấp: còn '+eur(left)+'">';
+  for(let v=0;v<=RESERVE;v+=50){const y=top+h-(v/RESERVE)*h;
     s+='<line x1="'+(x+w+5)+'" x2="'+(x+w+13)+'" y1="'+y+'" y2="'+y+'" stroke="#CBBDF2" stroke-width="2.5" stroke-linecap="round"/>';
     s+='<text x="'+(x+w+17)+'" y="'+(y+4)+'" font-size="11" font-weight="800" fill="#CBBDF2" font-family="Nunito,sans-serif">'+v+'</text>';}
   s+='<rect x="'+x+'" y="'+(top-12)+'" width="'+w+'" height="'+(h+40)+'" rx="15" fill="#4A2B99" stroke="#0D0623" stroke-width="3"/>';
@@ -755,9 +755,9 @@ function renderReserve(){
   mood.style.background=thermColor(r);mood.style.color="#0D0623";
   const items=[...state.reserve].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
   $("resLog").innerHTML=items.length?items.map(x=>{const d=parseD(x.date);
-    return '<div class="item"><div class="ic" style="background:'+thermColor(r)+'">QP</div><div class="t"><b>'+esc(x.note||"Chi từ quỹ phụ")+'</b><span>'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+'</span></div>'+
+    return '<div class="item"><div class="ic" style="background:'+thermColor(r)+'">KC</div><div class="t"><b>'+esc(x.note||"Chi từ quỹ khẩn cấp")+'</b><span>'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+'</span></div>'+
       '<div class="r"><span class="amt num">'+eur(x.amount)+'</span><button class="btn '+(armedR===x.id?"danger":"ghost")+' sm" type="button" data-rdel="'+esc(x.id)+'">'+(armedR===x.id?"Xoá thật?":"Xoá")+'</button></div></div>';}).join("")
-    :emptyBox("Chưa rút đồng nào. Quỹ còn nóng nguyên 500 €.");
+    :emptyBox("Chưa rút đồng nào. Quỹ còn nóng nguyên 250 €.");
 }
 $("resForm").addEventListener("submit",e=>{e.preventDefault();
   const amt=Math.round(parseFloat(String($("resAmt").value).replace(",","."))*100)/100;
@@ -765,7 +765,7 @@ $("resForm").addEventListener("submit",e=>{e.preventDefault();
   $("resMsg").textContent="";
   state.reserve.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),amount:amt,date:dKey(new Date()),note:$("resNote").value.trim().slice(0,80)});
   persistReserve();$("resAmt").value="";$("resNote").value="";renderReserve();
-  const left=RESERVE-sum(state.reserve);toast("-"+eur(amt)+" từ quỹ phụ, còn "+eur(left));});
+  const left=RESERVE-sum(state.reserve);toast("-"+eur(amt)+" từ quỹ khẩn cấp, còn "+eur(left));});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rdel]");if(!b)return;const id=b.dataset.rdel;
   if(armedR!==id){armedR=id;clearTimeout(armRTimer);armRTimer=setTimeout(()=>{armedR=null;renderReserve();},3500);renderReserve();return;}
   armedR=null;state.reserve=state.reserve.filter(x=>x.id!==id);persistReserve();renderReserve();toast("Đã xoá, quỹ ấm lại");});
