@@ -265,6 +265,27 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
 .cal-day:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
 .cal-foot{display:flex;justify-content:center;margin-top:8px}
 
+/* light tiles for contrast on dark cards */
+:root{--tile-pink:#FFD6EA;--tile-teal:#CFF8EF;--tile-lav:#ECE4FF;--tile-ink:#1C0D3A;--tile-sub:#5B4A7A}
+.rule-list li{background:var(--tile-pink);color:var(--tile-ink)}
+.rule-list li:nth-child(2){background:var(--tile-lav)}
+.rule-list li:nth-child(3){background:#FFF1C2}
+.rule-list li:nth-child(4){background:#FFD9DF}
+.rule-list li:nth-child(5){background:var(--tile-teal)}
+.rule-list span:not(.rb){color:var(--tile-sub)}
+.stat{background:var(--tile-teal);color:var(--tile-ink)}
+.stat span{color:var(--tile-sub)}
+.item{background:var(--tile-lav);color:var(--tile-ink)}
+.item .t span,.item .t span.num{color:var(--tile-sub)}
+.item .amt{color:var(--tile-ink)}
+.item .qty b{color:var(--tile-ink)}
+.opt{background:var(--tile-lav);color:var(--tile-ink)}
+.opt span{color:var(--tile-sub)}
+.opt em{color:#0E7C68}
+.empty{background:var(--tile-lav);color:var(--tile-sub);border-color:#B9A8EE}
+.panel{background:var(--tile-lav);color:var(--tile-ink)}
+.panel .note{color:var(--tile-sub)}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
