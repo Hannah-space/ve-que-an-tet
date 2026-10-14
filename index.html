@@ -621,7 +621,7 @@ function renderEnergy(){
   { const sa=sum(items.filter(x=>x.cat==="ansang")), w=Math.min(100,sa/PERSONAL*100);
     h+='<div><div class="en-top"><div>Ăn sáng</div><span class="num">'+eur(sa)+' · '+Math.round(sa/PERSONAL*100)+'% của '+eur(PERSONAL)+'</span></div>'+
        '<div class="en-bar" role="meter" aria-label="Ăn sáng" aria-valuemin="0" aria-valuemax="'+PERSONAL+'" aria-valuenow="'+sa.toFixed(2)+'"><i style="width:'+w+'%;background:#FFE08A"></i></div>'+
-       '<div class="note" style="margin-top:4px">Chưa có mức tối đa riêng, tính vào chi tiêu cá nhân.</div></div>'; }
+       '<div class="note" style="margin-top:4px">Chưa có mức tối đa riêng, tính vào chi tiêu cần thiết.</div></div>'; }
   CATS.filter(c=>c.b&&c.k!=="antrua").forEach(c=>{h+=bar(c);});
   { const kh=sum(items.filter(x=>x.cat==="khac")), w=Math.min(100,kh/PERSONAL*100);
     h+='<div><div class="en-top"><div>Khác</div><span class="num">'+eur(kh)+' · '+Math.round(kh/PERSONAL*100)+'% của '+eur(PERSONAL)+'</span></div>'+
@@ -632,10 +632,14 @@ function renderEnergy(){
        '<div class="en-bar" role="meter" aria-label="Quà cáp" aria-valuemin="0" aria-valuemax="'+GM+'" aria-valuenow="'+q.toFixed(2)+'"><i class="'+(l==="ok"?"":l)+'" style="width:'+w+'%"></i></div>'+
        '<div class="note" style="margin-top:4px">Tối đa 50 € mỗi tháng, trừ vào quỹ quà cáp 100 €, không tính vào '+eur(PERSONAL)+'.</div></div>'; }
   h+=bar(CAT.antrua)+'<div class="note" style="margin-top:-8px">Ăn trưa có ngân sách riêng 75 €, không tính vào '+eur(PERSONAL)+'.</div>';
-  const other=sum(items.filter(x=>x.cat==="khac"||x.cat==="ansang")), pers=sum(items.filter(isPersonal)), l=level(pers,PERSONAL);
-  h+='<div class="en-total"><div class="en-top"><div>Tổng chi cá nhân<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(pers)+' / '+eur(PERSONAL)+'</span></div>'+
-     '<div class="en-bar"><i class="'+(l==="ok"?"":l)+'" style="width:'+Math.min(100,pers/PERSONAL*100)+'%"></i></div>'+
-     '<div class="note">Gồm Siêu thị, Ăn nhà hàng, Mua sắm, Ăn sáng và Khác ('+eur(other)+' cho Ăn sáng và Khác). Còn lại tháng này: <b class="num" style="color:var(--ink)">'+eur(PERSONAL-pers)+'</b></div></div>';
+  const pers=sum(items.filter(isPersonal));
+  const grp=(title,cats,cap,desc)=>{const s=sum(items.filter(x=>cats.includes(x.cat))), l=level(s,cap);
+    return '<div class="en-total"><div class="en-top"><div>'+title+'<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(s)+' / '+eur(cap)+'</span></div>'+
+      '<div class="en-bar"><i class="'+(l==="ok"?"":l)+'" style="width:'+Math.min(100,s/cap*100)+'%"></i></div>'+
+      '<div class="note">'+desc+'</div></div>';};
+  h+=grp("Chi tiêu cần thiết",["ansang","sieuthi","antrua","muasam"],215,"Ăn sáng, Siêu thị, Ăn trưa, Mua sắm. Mức tối đa = 115 + 75 + 25 €.");
+  h+=grp("Chi tiêu cá nhân",["thethao","khac","nhahang"],82,"Thể thao, Khác, Ăn nhà hàng. Mức tối đa = 55 + 27 €.");
+  h+='<div class="note">Ngân sách chi tiêu tháng này (không gồm ăn trưa, thể thao, quà cáp, du lịch): đã chi <b class="num" style="color:var(--ink)">'+eur(pers)+'</b> / '+eur(PERSONAL)+', còn lại <b class="num" style="color:var(--ink)">'+eur(PERSONAL-pers)+'</b>.</div>';
   $("energy").innerHTML=h;
 }
 
