@@ -354,7 +354,7 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
         <button class="btn sm" type="submit">+ Ghi</button>
       </form>
       <div class="log dep-log" id="travLog"></div>
-      <p class="note" style="font-size:13px">Kế hoạch: +60 € cuối mỗi tháng, được 300 € vào 28/02/2027 (mục tiêu 400 €). Khoản "Du lịch" trong sổ chi tiêu được trừ vào quỹ này.</p>
+      <p class="note" style="font-size:13px">Kế hoạch: +60 € cuối mỗi tháng, được 300 € vào 28/02/2027 (mục tiêu 400 €).</p>
     </div>
     <div class="card travel gift">
       <div class="label">Quỹ phụ</div>
@@ -372,7 +372,7 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
         <button class="btn sm" type="submit">+ Ghi</button>
       </form>
       <div class="log dep-log" id="giftLog"></div>
-      <p class="note" style="font-size:13px">Kế hoạch: bắt đầu 0 €, +25 € cuối mỗi tháng, đủ 125 € vào 28/02/2027. Khoản "Quà cáp" trong sổ chi tiêu được trừ vào quỹ này.</p>
+      <p class="note" style="font-size:13px">Kế hoạch: bắt đầu 0 €, +25 € cuối mỗi tháng, đủ 125 € vào 28/02/2027.</p>
     </div>
     </div>
   </section>
@@ -465,7 +465,7 @@ const TARGET=3990, START=1500, MONTHLY=450, LEVEL_STEP=500;
 const PLAN_END_Y=2027, PLAN_END_M=1; // Feb 2027 (0-based month)
 const TRAVEL_TARGET=400, TRAVEL_MONTHLY=80;
 const INCOME=1470, PERSONAL=215;
-const NEED=["ansang","sieuthi","antrua"], PERS=["muasam","nhahang","thethao","khac"];
+const NEED=["ansang","sieuthi","antrua"], PERS=["muasam","nhahang","thethao","quacap","dulich","khac"];
 const TET=new Date(2027,2,5);
 const BUDGET=[
   ["Tiền nhà",502,"#8F7BEA"],["Gửi mẹ",200,"#FF6FB5"],["Đi lại",26,"#C9B8FF"],
@@ -495,7 +495,7 @@ const dim=d=>new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
 const mLabel=d=>"Tháng "+pad(d.getMonth()+1)+"/"+d.getFullYear();
 const DOW=["CN","T2","T3","T4","T5","T6","T7"];
 const GIFT_FUND=0;
-const isPersonal=it=>it.cat!=="dulich"&&it.cat!=="quacap";
+const isPersonal=it=>true;
 const pb=d=>PERSONAL;
 
 /* ---------------- state + storage ---------------- */
@@ -594,8 +594,8 @@ function renderQuest(){
   let t="";for(let v=LEVEL_STEP;v<TARGET;v+=LEVEL_STEP){t+='<span class="'+(bal>=v?"on":"")+'" style="left:'+(v/TARGET*100)+'%">Lv'+(v/LEVEL_STEP)+'</span>';}
   t+='<span class="'+(bal>=TARGET?"on":"")+'" style="left:calc(100% - 14px)">Tết</span>';
   $("ticks").innerHTML=t;
-  renderFund("trav","travel",comp.tr,400,"dulich");
-  renderFund("gift","gift",comp.g,125,"quacap");
+  renderFund("trav","travel",comp.tr,400,null);
+  renderFund("gift","gift",comp.g,125,null);
   const days=Math.ceil((TET-new Date(new Date().toDateString()))/864e5);
   $("tetChip").textContent=days>0?"Còn "+days+" ngày đến 05/03/2027":days===0?"Hôm nay là 05/03/2027!":"Đã qua 05/03/2027";
   if(bal>=TARGET&&!celebrated){celebrated=true;fireworks(7);}
@@ -628,12 +628,10 @@ function renderEnergy(){
   h+='<div class="sub-h" style="margin:6px 0 0">Chi tiêu cá nhân</div>';
   PERS.forEach(k=>{h+=shareBar(CAT[k].n,S(k),persCap,CAT[k].c);});
   h+='<div class="en-total">'+capBar("Tổng cá nhân",pers,persCap)+'<div class="note">Ngân sách cá nhân = '+eur(PERSONAL)+' trừ '+eur(needCap)+' chi tiêu cần thiết.</div></div>';
-  { const GM=50, q=S("quacap"), l=level(q,GM);
-    h+='<div class="en-total">'+capBar("Quà cáp",q,GM)+'<div class="note">Tối đa 50 € mỗi tháng, trừ vào quỹ quà cáp, không tính vào '+eur(PERSONAL)+'.</div></div>'; }
   const all=need+pers, l=level(all,PERSONAL);
   h+='<div class="en-total"><div class="en-top"><div>TỔNG CHI THÁNG<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(all)+' / '+eur(PERSONAL)+'</span></div>'+
      '<div class="en-bar"><i class="'+(l==="ok"?"":l)+'" style="width:'+Math.min(100,all/PERSONAL*100)+'%"></i></div>'+
-     '<div class="note">Còn lại tháng này: <b class="num" style="color:var(--ink)">'+eur(PERSONAL-all)+'</b>. Không gồm du lịch và quà cáp (trừ vào quỹ riêng).</div></div>';
+     '<div class="note">Còn lại tháng này: <b class="num" style="color:var(--ink)">'+eur(PERSONAL-all)+'</b>.</div></div>';
   $("energy").innerHTML=h;
 }
 
@@ -652,8 +650,6 @@ function renderStats(){
     let h='<div class="big num">'+eur(pers)+' <small>/ '+eur(al)+' mỗi ngày</small></div>'+
       '<div class="en-bar" style="margin-top:12px"><i class="'+(l==="ok"?"":l)+'" style="width:'+Math.min(100,al?pers/al*100:0)+'%"></i></div>'+
       '<div class="note">Mức cho phép mỗi ngày = '+eur(PERSONAL)+' ÷ '+dim(cursor)+' ngày. '+(pers>al?'Hôm nay vượt '+eur(pers-al)+'.':'Còn dư '+eur(al-pers)+'.')+'</div>';
-    const dl=sum(items.filter(x=>x.cat==="dulich"));if(dl)h+='<div class="note">Du lịch (trừ quỹ du lịch): '+eur(dl)+'</div>';
-    const lu=sum(items.filter(x=>x.cat==="antrua"));if(lu)h+='<div class="note">Ăn trưa (ngân sách riêng 75 €/tháng): '+eur(lu)+'</div>';
     h+='<div class="sub-h">Các khoản trong ngày</div>'+(items.length?'<div class="log">'+items.map(itemRow).join("")+'</div>':emptyBox("Chưa ghi khoản nào cho ngày này."));
     body.innerHTML=h;
   } else if(view==="week"){
@@ -664,7 +660,7 @@ function renderStats(){
     const wb=days.reduce((a,d)=>a+allowance(d),0), tot=vals.reduce((a,b)=>a+b,0), l=level(tot,wb);
     body.innerHTML='<div class="big num">'+eur(tot)+' <small>/ '+eur(wb)+' ngân sách tuần</small> <span class="pill '+l+'">'+pillTxt(l)+'</span></div>'+
       '<div class="chart" style="margin-top:12px">'+barChart(days.map((d,i)=>({lab:DOW[d.getDay()],sub:pad(d.getDate()),v:vals[i],hi:dKey(d)===dKey(new Date())})),allowance(days[3]),"mức/ngày")+'</div>'+
-      '<div class="note">Không tính "Du lịch" và "Quà cáp" (trừ vào quỹ riêng). Đường nét đứt là mức cho phép mỗi ngày.</div>';
+      '<div class="note">Đường nét đứt là mức cho phép mỗi ngày.</div>';
   } else {
     const mk=mKey(cursor), items=monthItems(mk), pers=sum(items.filter(isPersonal));
     $("navLabel").textContent=mLabel(cursor);
@@ -675,7 +671,7 @@ function renderStats(){
     else h+=emptyBox("Tháng này chưa có khoản chi nào.");
     const ms=[...Array(6)].map((_,i)=>new Date(cursor.getFullYear(),cursor.getMonth()-5+i,1));
     h+='<div class="sub-h">So sánh 6 tháng</div><div class="chart">'+barChart(ms.map(d=>({lab:"T"+(d.getMonth()+1),sub:String(d.getFullYear()).slice(2),v:sum(monthItems(mKey(d)).filter(isPersonal)),hi:mKey(d)===mk})),215,"215 €")+'</div>'+
-       '<div class="note">Tổng chi mỗi tháng (không tính du lịch và quà cáp) so với ngân sách 215 €.</div>';
+       '<div class="note">Tổng chi mỗi tháng so với ngân sách 215 €.</div>';
     body.innerHTML=h;
   }
 }
@@ -725,9 +721,9 @@ function findItem(id){for(const mk in state.months){const i=state.months[mk].fin
 /* ---------------- side funds: actual deposits ---------------- */
 let armedD=null, armDTimer=null;
 function renderFund(key,fund,plan,target,cat){
-  const deps=state.deposits[fund]||[], actual=sum(deps), spent=sum(allItems().filter(x=>x.cat===cat)), p=Math.min(100,actual/target*100);
+  const deps=state.deposits[fund]||[], actual=sum(deps), spent=cat?sum(allItems().filter(x=>x.cat===cat)):0, p=Math.min(100,actual/target*100);
   $(key+"Txt").textContent=eur(actual);$(key+"Fill").style.width=p.toFixed(1)+"%";$(key+"Pct").textContent=Math.floor(p)+"%";
-  $(key+"Plan").textContent=eur(plan);$(key+"Spent").textContent=eur(spent);$(key+"Left").textContent=eur(actual-spent);
+  $(key+"Plan").textContent=eur(plan);$(key+"Spent").parentElement.hidden=!cat;$(key+"Spent").textContent=eur(spent);$(key+"Left").textContent=eur(actual-spent);
   const items=[...deps].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
   $(key+"Log").innerHTML=items.map(x=>{const d=parseD(x.date),dk=fund+":"+x.id;
     return '<div class="item"><div class="ic" style="background:'+(fund==="travel"?"#7FA8FF":"#FF9ACB")+'">+</div><div class="t"><b class="num">'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+'</b><span>bỏ vào quỹ</span></div>'+
