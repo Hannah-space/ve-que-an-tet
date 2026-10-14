@@ -618,6 +618,10 @@ function renderEnergy(){
   const bar=c=>{const s=sum(items.filter(x=>x.cat===c.k)), l=level(s,c.b), w=Math.min(100,s/c.b*100);
     return '<div><div class="en-top"><div>'+esc(c.n)+'<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(s)+' / '+eur(c.b)+'</span></div>'+
        '<div class="en-bar" role="meter" aria-label="'+esc(c.n)+'" aria-valuemin="0" aria-valuemax="'+c.b+'" aria-valuenow="'+s.toFixed(2)+'"><i class="'+(l==="ok"?"":l)+'" style="width:'+w+'%"></i></div></div>';};
+  { const sa=sum(items.filter(x=>x.cat==="ansang")), w=Math.min(100,sa/PERSONAL*100);
+    h+='<div><div class="en-top"><div>Ăn sáng</div><span class="num">'+eur(sa)+' · '+Math.round(sa/PERSONAL*100)+'% của '+eur(PERSONAL)+'</span></div>'+
+       '<div class="en-bar" role="meter" aria-label="Ăn sáng" aria-valuemin="0" aria-valuemax="'+PERSONAL+'" aria-valuenow="'+sa.toFixed(2)+'"><i style="width:'+w+'%;background:#FFE08A"></i></div>'+
+       '<div class="note" style="margin-top:4px">Chưa có mức tối đa riêng, tính vào chi tiêu cá nhân.</div></div>'; }
   CATS.filter(c=>c.b&&c.k!=="antrua").forEach(c=>{h+=bar(c);});
   { const GM=50, q=sum(items.filter(x=>x.cat==="quacap")), l=level(q,GM), w=Math.min(100,q/GM*100);
     h+='<div><div class="en-top"><div>Quà cáp<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(q)+' / '+eur(GM)+'</span></div>'+
