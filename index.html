@@ -658,6 +658,12 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
           <button class="btn ghost" type="button" id="impBtn">Nhập dữ liệu</button>
           <input type="file" id="impFile" accept=".json,application/json" hidden>
         </div>
+        <div class="panel" id="ghSync" style="margin-top:12px">
+          <b>Đồng bộ điện thoại và máy tính (GitHub)</b>
+          <div class="note" id="ghStatus" style="margin:0">Chưa kết nối. Dữ liệu đang chỉ lưu trên trình duyệt này.</div>
+          <div class="field" id="ghForm"><label for="ghToken" style="color:var(--tile-sub)">GitHub token (quyền gist)</label><input id="ghToken" type="password" placeholder="ghp_..." autocomplete="off" spellcheck="false"></div>
+          <div class="form-actions"><button class="btn sm" type="button" id="ghConnect">Kết nối</button><button class="btn ghost sm" type="button" id="ghSyncNow" hidden>Đồng bộ ngay</button><button class="btn ghost sm" type="button" id="ghLogout" hidden>Ngắt kết nối</button></div>
+        </div>
         <div class="panel" id="expPanel" hidden>
           <div class="note" style="margin:0">Không tải file được ở đây. Hãy sao chép đoạn dưới và lưu vào một file .json.</div>
           <textarea id="expText" readonly></textarea>
@@ -731,7 +737,46 @@ function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r){const o=JSON
       try{if(!localStorage.getItem("vqat-seed1")){for(const mk in SEED.months){const have=new Set((o.months[mk]||[]).map(x=>x.id));o.months[mk]=(o.months[mk]||[]).concat(SEED.months[mk].filter(x=>!have.has(x.id)));}
         localStorage.setItem("vqat-seed1","1");localStorage.setItem(LS_KEY,JSON.stringify(o));}}catch(e){}
       return o;}}}catch(e){}try{localStorage.setItem("vqat-seed1","1");}catch(e){}return Object.assign({grocery:[]},JSON.parse(JSON.stringify(SEED)));}
-function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));if(!GH.applying)localStorage.setItem("vqat-ts",String(Date.now()));}catch(e){}if(!GH.applying)ghSchedule();}
+/* ---------------- GitHub Gist sync ---------------- */
+const GH={token:null,gist:null,timer:null,busy:false,applying:false,last:null};
+const GH_FILE="ve-que-an-tet.json", GH_API="https://api.github.com";
+function ghLoad(){try{GH.token=localStorage.getItem("vqat-gh-token");GH.gist=localStorage.getItem("vqat-gh-gist");}catch(e){}}
+function ghSave(){try{if(GH.token)localStorage.setItem("vqat-gh-token",GH.token);else localStorage.removeItem("vqat-gh-token");if(GH.gist)localStorage.setItem("vqat-gh-gist",GH.gist);else localStorage.removeItem("vqat-gh-gist");}catch(e){}}
+function localTs(){try{return Number(localStorage.getItem("vqat-ts")||0);}catch(e){return 0;}}
+function ghHeaders(){return {"Authorization":"Bearer "+GH.token,"Accept":"application/vnd.github+json","Content-Type":"application/json"};}
+function ghPayload(){return JSON.stringify({app:"ve-que-an-tet",updatedAt:localTs()||Date.now(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery});}
+function ghStatus(t,ok){const el=document.getElementById("ghStatus");if(el)el.textContent=t;
+  const on=!!(GH.token&&GH.gist);const f=document.getElementById("ghForm");if(f)f.hidden=on;
+  ["ghSyncNow","ghLogout"].forEach(id=>{const b=document.getElementById(id);if(b)b.hidden=!on;});
+  const c=document.getElementById("ghConnect");if(c)c.hidden=on;
+  if(on){const chip=$("syncChip");chip.classList.toggle("local",ok===false);$("syncText").textContent=ok===false?"Lỗi đồng bộ GitHub":"Đồng bộ qua GitHub";}}
+async function ghFetch(path,opt){const res=await fetch(GH_API+path,Object.assign({headers:ghHeaders()},opt||{}));
+  if(res.status===401||res.status===403)throw new Error("auth");if(!res.ok)throw new Error("http "+res.status);return res.json();}
+function ghApply(remote){
+  const norm={settings:remote.settings||{balance:START,travel:0},months:remote.months||{},reserve:Array.isArray(remote.reserve)?remote.reserve:[],
+    deposits:remote.deposits&&typeof remote.deposits==="object"?{travel:remote.deposits.travel||[],gift:remote.deposits.gift||[]}:{travel:[],gift:[]},grocery:Array.isArray(remote.grocery)?remote.grocery.filter(x=>x&&x.k):[]};
+  GH.applying=true;state=norm;saveLocal();try{localStorage.setItem("vqat-ts",String(remote.updatedAt||Date.now()));}catch(e){}GH.applying=false;renderAll();}
+function ghSchedule(){if(!GH.token||!GH.gist)return;clearTimeout(GH.timer);GH.timer=setTimeout(ghPush,1200);}
+async function ghPush(){if(!GH.token||!GH.gist||GH.busy)return;GH.busy=true;
+  try{await ghFetch("/gists/"+GH.gist,{method:"PATCH",body:JSON.stringify({files:{[GH_FILE]:{content:ghPayload()}}})});GH.last=new Date();ghStatus("Đã đồng bộ lúc "+GH.last.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+".",true);}
+  catch(e){ghStatus(e.message==="auth"?"Token không đúng hoặc đã hết hạn. Hãy ngắt kết nối rồi dán token mới.":"Chưa gửi được lên GitHub, sẽ thử lại.",false);}
+  finally{GH.busy=false;}}
+async function ghPull(){if(!GH.token||!GH.gist||GH.busy)return;GH.busy=true;
+  try{const g=await ghFetch("/gists/"+GH.gist);const f=g.files&&g.files[GH_FILE];let remote=null;
+    if(f){let txt=f.content;if(f.truncated&&f.raw_url){txt=await (await fetch(f.raw_url)).text();}remote=JSON.parse(txt);}
+    GH.busy=false;
+    if(remote&&(remote.updatedAt||0)>localTs()){ghApply(remote);toast("Đã tải dữ liệu mới từ thiết bị khác");}
+    else if(!remote||(remote.updatedAt||0)<localTs()){await ghPush();return;}
+    GH.last=new Date();ghStatus("Đã đồng bộ lúc "+GH.last.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+".",true);}
+  catch(e){GH.busy=false;ghStatus(e.message==="auth"?"Token không đúng hoặc đã hết hạn. Hãy ngắt kết nối rồi dán token mới.":"Không kết nối được GitHub, sẽ thử lại.",false);}}
+async function ghConnect(){const t=$("ghToken").value.trim();if(!t){toast("Dán token vào ô trước");return;}
+  GH.token=t;ghStatus("Đang kết nối…");
+  try{const list=await ghFetch("/gists?per_page=100");const found=list.find(g=>g.files&&g.files[GH_FILE]);
+    if(found){GH.gist=found.id;ghSave();$("ghToken").value="";GH.busy=false;await ghPull();toast("Đã kết nối, dùng dữ liệu chung trên GitHub");}
+    else{const g=await ghFetch("/gists",{method:"POST",body:JSON.stringify({description:"Về Quê Ăn Tết – dữ liệu chi tiêu",public:false,files:{[GH_FILE]:{content:ghPayload()}}})});
+      GH.gist=g.id;ghSave();$("ghToken").value="";ghStatus("Đã tạo kho dữ liệu riêng tư trên GitHub và đồng bộ.",true);toast("Đã kết nối GitHub");}}
+  catch(e){GH.token=null;GH.gist=null;ghSave();ghStatus(e.message==="auth"?"Token không đúng hoặc thiếu quyền gist.":"Không kết nối được GitHub. Kiểm tra mạng rồi thử lại.",false);}}
 function hasData(s){return s&&((s.grocery||[]).length||(s.reserve||[]).length||(s.deposits&&((s.deposits.travel||[]).length||(s.deposits.gift||[]).length))||Object.keys(s.months||{}).some(k=>(s.months[k]||[]).length)||s.settings.balance!==START||s.settings.travel!==0);}
 const queues={};
 function enqueue(key,fn){const p=(queues[key]||Promise.resolve()).then(fn).catch(err=>{
@@ -1211,6 +1256,13 @@ renderStrip();renderCats();resetForm();
 document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.v===view)));
 renderAll();
 initStore();
+ghLoad();
+document.getElementById("ghConnect").addEventListener("click",ghConnect);
+document.getElementById("ghSyncNow").addEventListener("click",()=>{ghPull();});
+document.getElementById("ghLogout").addEventListener("click",()=>{GH.token=null;GH.gist=null;ghSave();ghStatus("Đã ngắt kết nối. Dữ liệu vẫn còn trên trình duyệt này và trên GitHub.");setSync("local");});
+if(GH.token&&GH.gist){setTimeout(()=>{ghStatus("Đang đồng bộ…",true);ghPull();},300);}else ghStatus("Chưa kết nối. Dữ liệu đang chỉ lưu trên trình duyệt này.");
+setInterval(()=>{if(document.visibilityState==="visible")ghPull();},30000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ghPull();});
 })();
 </script>
 
