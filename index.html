@@ -216,6 +216,30 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
 .rule-list span:not(.rb){display:block;font-size:13px;color:var(--muted);font-weight:700;margin-top:2px}
 .rb{flex:none;width:34px;height:34px;border-radius:11px;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--line)}
 
+/* grocery basket */
+.basket-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.basket{flex:none;width:150px}
+.basket svg{display:block;width:150px;height:auto}
+.basket-side{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.shelf-group{margin-top:8px}
+.shelf-group .label{display:block;margin-bottom:6px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.opt{font-family:var(--f-body);text-align:left;border:2px solid var(--line);border-radius:14px;background:var(--panel-2);color:var(--ink);padding:8px 10px;cursor:pointer;box-shadow:0 3px 0 var(--line);display:flex;flex-direction:column;gap:2px;min-width:0;position:relative}
+.opt b{font-weight:900;font-size:14px}
+.opt span{font-size:12px;color:var(--muted);font-weight:700}
+.opt em{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:16px;color:var(--teal)}
+.opt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.opt[aria-pressed=true]{background:var(--teal);color:var(--teal-ink)}
+.opt[aria-pressed=true] span,.opt[aria-pressed=true] em{color:var(--teal-ink)}
+.opt[aria-pressed=true]::after{content:"✓";position:absolute;top:6px;right:8px;font-weight:900}
+.opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.gr-row{grid-template-columns:auto minmax(0,1fr)}
+.gr-row .r{grid-column:1/-1;justify-content:space-between}
+.gr-row .t span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gr-row .price-in{width:78px;font-size:14px;padding:4px 6px;border-width:2px;border-radius:8px}
+.qty{display:inline-flex;align-items:center;gap:4px}
+.qty b{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+
 /* reserve thermometer */
 .therm-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
 .therm{flex:none;width:110px}
@@ -410,6 +434,19 @@ footer{color:var(--dim);font-size:12px;font-weight:700;text-align:center}
         <h2>Thanh năng lượng <span class="label" style="margin-left:auto" id="enMonth">Tháng 10/2026</span></h2>
         <div class="energy" id="energy"></div>
       </div>
+
+      <div class="card basket-card">
+        <h2>Giỏ siêu thị <span class="label" style="margin-left:auto">Carrefour Part-Dieu</span></h2>
+        <div class="basket-top">
+          <div class="basket" id="bkSvg"></div>
+          <div class="basket-side" id="bkSum"></div>
+        </div>
+        <div class="sub-h">Chọn món bỏ vào giỏ</div>
+        <div id="bkShelf"></div>
+        <div class="sub-h">Trong giỏ (1 tháng)</div>
+        <div class="log" id="grList"></div>
+        <p class="note">Giá tham khảo ước tính theo mức giá thường gặp ở Carrefour, chưa phải giá niêm yết tại Westfield Part-Dieu. Hannah sửa trực tiếp ô giá trong giỏ khi thấy giá thật.</p>
+      </div>
     </div>
 
     <div class="col">
@@ -500,15 +537,15 @@ const pb=d=>PERSONAL;
 
 /* ---------------- state + storage ---------------- */
 const LS_KEY="vqat-v1";
-let state={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]}};
+let state={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[]};
 let db=null, uid=null, mode="local";
 const SEED={"settings": {"balance": 1500, "travel": 0}, "months": {"2026-10": [{"amount": 1.2, "cat": "ansang", "date": "2026-10-13", "id": "mv6s66n0xeqz", "note": ""}, {"amount": 80, "cat": "khac", "date": "2026-10-08", "id": "mv6schshyk8s", "note": "TGV Max"}, {"amount": 24, "cat": "khac", "date": "2026-10-08", "id": "mv6sbl8x2rek", "note": "Capcut"}, {"amount": 2.15, "cat": "ansang", "date": "2026-10-08", "id": "mv6selwsry69", "note": ""}, {"amount": 8, "cat": "sieuthi", "date": "2026-10-08", "id": "mv6serqcoikj", "note": ""}, {"amount": 10, "cat": "sieuthi", "date": "2026-10-09", "id": "mv6sf2ta6n0e", "note": ""}, {"amount": 3.77, "cat": "sieuthi", "date": "2026-10-09", "id": "mv6sfusdgj4o", "note": ""}, {"amount": 10, "cat": "thethao", "date": "2026-10-13", "id": "mv6sg0l1y67w", "note": ""}, {"amount": 30, "cat": "antrua", "date": "2026-10-13", "id": "mv6sh7un6i8f", "note": ""}]}, "reserve": [], "deposits": {"travel": [], "gift": []}};
-function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r){const o=JSON.parse(r);if(o&&o.settings&&o.months){if(!Array.isArray(o.reserve))o.reserve=[];if(!o.deposits||typeof o.deposits!=="object")o.deposits={travel:[],gift:[]};
+function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r){const o=JSON.parse(r);if(o&&o.settings&&o.months){if(!Array.isArray(o.reserve))o.reserve=[];if(!Array.isArray(o.grocery))o.grocery=[];o.grocery=o.grocery.filter(x=>x&&x.k);if(!o.deposits||typeof o.deposits!=="object")o.deposits={travel:[],gift:[]};
       try{if(!localStorage.getItem("vqat-seed1")){for(const mk in SEED.months){const have=new Set((o.months[mk]||[]).map(x=>x.id));o.months[mk]=(o.months[mk]||[]).concat(SEED.months[mk].filter(x=>!have.has(x.id)));}
         localStorage.setItem("vqat-seed1","1");localStorage.setItem(LS_KEY,JSON.stringify(o));}}catch(e){}
-      return o;}}}catch(e){}try{localStorage.setItem("vqat-seed1","1");}catch(e){}return JSON.parse(JSON.stringify(SEED));}
+      return o;}}}catch(e){}try{localStorage.setItem("vqat-seed1","1");}catch(e){}return Object.assign({grocery:[]},JSON.parse(JSON.stringify(SEED)));}
 function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
-function hasData(s){return s&&((s.reserve||[]).length||(s.deposits&&((s.deposits.travel||[]).length||(s.deposits.gift||[]).length))||Object.keys(s.months||{}).some(k=>(s.months[k]||[]).length)||s.settings.balance!==START||s.settings.travel!==0);}
+function hasData(s){return s&&((s.grocery||[]).length||(s.reserve||[]).length||(s.deposits&&((s.deposits.travel||[]).length||(s.deposits.gift||[]).length))||Object.keys(s.months||{}).some(k=>(s.months[k]||[]).length)||s.settings.balance!==START||s.settings.travel!==0);}
 const queues={};
 function enqueue(key,fn){const p=(queues[key]||Promise.resolve()).then(fn).catch(err=>{
   if(err&&err.code==="quota_exceeded")toast("Bộ nhớ đã đầy, hãy xuất dữ liệu và xoá bớt");
@@ -547,11 +584,12 @@ async function initStore(){
   db=d;uid=id;mode="db";setSync("db");
   let first=true;
   db.collection("data/users/"+uid).onSnapshot(snap=>{
-    if(first){first=false;if(snap.empty){if(hasData(state)){persist(Object.keys(state.months),true);persistReserve();persistDeposits();}return;}}
-    const next={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]}};
+    if(first){first=false;if(snap.empty){if(hasData(state)){persist(Object.keys(state.months),true);persistReserve();persistDeposits();persistGrocery();}return;}}
+    const next={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[]};
     snap.docs.forEach(doc=>{const v=doc.data()||{};
       if(doc.id==="settings"){next.settings={balance:+v.balance||0,travel:+v.travel||0};}
       else if(doc.id==="deposits"){next.deposits={travel:Array.isArray(v.travel)?v.travel.map(x=>Object.assign({},x)):[],gift:Array.isArray(v.gift)?v.gift.map(x=>Object.assign({},x)):[]};}
+      else if(doc.id==="grocery"&&Array.isArray(v.items)){next.grocery=v.items.filter(x=>x&&x.k).map(x=>Object.assign({},x));}
       else if(doc.id==="reserve"&&Array.isArray(v.items)){next.reserve=v.items.map(x=>Object.assign({},x));}
       else if(doc.id.indexOf("m-")===0&&Array.isArray(v.items)){next.months[doc.id.slice(2)]=v.items.map(x=>Object.assign({},x));}
     });
@@ -746,6 +784,71 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ddel]");if
   if(armedD!==dk){armedD=dk;clearTimeout(armDTimer);armDTimer=setTimeout(()=>{armedD=null;renderQuest();},3500);renderQuest();return;}
   armedD=null;const[fund,id]=dk.split(":");state.deposits[fund]=(state.deposits[fund]||[]).filter(x=>x.id!==id);persistDeposits();renderQuest();toast("Đã xoá");});
 
+
+/* ---------------- grocery basket ---------------- */
+const GROCERY=[
+  {g:"Thịt & trứng",items:[["heo","Thịt heo","1 kg",8.50,"#FF9ACB"],["ga","Thịt gà (ức)","1 kg",11.90,"#FFE08A"],["bo","Thịt bò xay","1 kg",13.90,"#FF4D6D"],["trung","Trứng","hộp 12 quả",3.60,"#FFD23F"]]},
+  {g:"Tinh bột",items:[["gao","Gạo","1 kg",2.50,"#FFFFFF"],["my","Mì","gói 500 g",0.90,"#FFB547"]]},
+  {g:"Rau củ",items:[["carot","Cà rốt","500 g",0.80,"#FF8A3D"],["khoai","Khoai tây","500 g",0.90,"#D9B26F"],["nam","Nấm","500 g",2.80,"#C9B8FF"],["bapcai","Bắp cải","500 g",1.00,"#9BE15D"],["suplo","Súp lơ","500 g",1.50,"#F5F0E0"]]},
+  {g:"Gia vị & khác",items:[["giavi","Gia vị","1 món",2.50,"#8F7BEA"],["duong","Đường","1 kg",1.30,"#EDE7FF"]]}
+];
+const GMAP={};GROCERY.forEach(gr=>gr.items.forEach(it=>{GMAP[it[0]]={k:it[0],n:it[1],u:it[2],p:it[3],c:it[4]};}));
+let armedG=null, armGTimer=null;
+function persistGrocery(){
+  saveLocal();
+  if(mode!=="db")return;
+  const items=state.grocery.map(x=>({k:x.k,qty:x.qty,price:x.price}));
+  enqueue("grocery",()=>db.collection("data/users/"+uid).doc("grocery").set({items}));
+}
+function gPrice(x){return x.price!=null?x.price:(GMAP[x.k]?GMAP[x.k].p:0);}
+function basketSVG(total,cap,items){
+  const r=Math.min(1,total/cap), over=total>cap, col=over?"#FF4D6D":r>=.75?"#FFB547":"#2EE6C5";
+  const top=58,bot=150,h=bot-top, fy=bot-h*r;
+  let s='<svg viewBox="0 0 150 160" role="img" aria-label="Giỏ siêu thị: '+eur(total)+' trên '+eur(cap)+'"><defs><clipPath id="bkClip"><path d="M14 58 H136 L122 150 H28 Z"/></clipPath></defs>';
+  s+='<path d="M38 60 C38 10 112 10 112 60" fill="none" stroke="#0D0623" stroke-width="9" stroke-linecap="round"/><path d="M38 60 C38 10 112 10 112 60" fill="none" stroke="#FFB547" stroke-width="5" stroke-linecap="round"/>';
+  s+='<path d="M14 58 H136 L122 150 H28 Z" fill="#4A2B99"/>';
+  s+='<g clip-path="url(#bkClip)"><rect class="bk-fill" x="0" y="'+fy+'" width="150" height="'+(bot-fy)+'" fill="'+col+'" opacity=".85"/>';
+  const dots=items.slice(0,14);dots.forEach((x,i)=>{const m=GMAP[x.k];if(!m)return;const cx=34+(i%5)*20+(Math.floor(i/5)%2)*10, cy=bot-10-Math.floor(i/5)*16;
+    if(cy>top)s+='<circle cx="'+cx+'" cy="'+cy+'" r="8" fill="'+m.c+'" stroke="#0D0623" stroke-width="2"/>';});
+  s+='</g>';
+  for(let y=78;y<150;y+=22)s+='<line x1="10" x2="140" y1="'+y+'" y2="'+y+'" stroke="#0D0623" stroke-width="2" opacity=".55" clip-path="url(#bkClip)"/>';
+  for(let x=40;x<130;x+=22)s+='<line x1="'+x+'" x2="'+(x+(75-x)*0.12)+'" y1="58" y2="150" stroke="#0D0623" stroke-width="2" opacity=".55" clip-path="url(#bkClip)"/>';
+  s+='<path d="M14 58 H136 L122 150 H28 Z" fill="none" stroke="#0D0623" stroke-width="4" stroke-linejoin="round"/>';
+  s+='<rect x="8" y="50" width="134" height="14" rx="7" fill="#FFB547" stroke="#0D0623" stroke-width="3"/>';
+  return s+'</svg>';
+}
+function renderGrocery(){
+  const cap=CAT.sieuthi.b, items=state.grocery||[], total=items.reduce((a,x)=>a+gPrice(x)*x.qty,0), l=level(total,cap);
+  const spent=sum(monthItems(mKey(new Date())).filter(x=>x.cat==="sieuthi"));
+  $("bkSvg").innerHTML=basketSVG(total,cap,items);
+  $("bkSum").innerHTML='<div class="label">Dự tính 1 tháng</div><div class="xp-amount num" style="font-size:30px">'+eur(total)+' <span class="of">/ '+eur(cap)+'</span></div>'+
+    '<div><span class="pill '+l+'" style="margin-left:0">'+pillTxt(l)+'</span></div>'+
+    '<div class="note" style="margin:0">'+(total>cap?'Vượt ngân sách siêu thị '+eur(total-cap)+'.':'Còn dư '+eur(cap-total)+' so với ngân sách siêu thị.')+'</div>'+
+    '<div class="note" style="margin:0">Thực tế tháng này đã chi siêu thị: <b class="num" style="color:var(--ink)">'+eur(spent)+'</b></div>';
+  const inB=new Set(items.map(x=>x.k));
+  $("bkShelf").innerHTML=GROCERY.map(gr=>'<div class="shelf-group"><span class="label">'+esc(gr.g)+'</span><div class="shelf">'+gr.items.map(it=>{const m=GMAP[it[0]];
+    return '<button type="button" class="opt" data-gk="'+m.k+'" aria-pressed="'+inB.has(m.k)+'"><b>'+esc(m.n)+'</b><span>'+esc(m.u)+'</span><em class="num">'+eur(m.p)+'</em></button>';}).join("")+'</div></div>').join("");
+  $("grList").innerHTML=items.length?items.map(x=>{const m=GMAP[x.k]||{n:x.k,u:"",c:"#C9B8FF"};
+    return '<div class="item gr-row"><div class="ic" style="background:'+m.c+'"></div>'+
+    '<div class="t"><b>'+esc(m.n)+'</b><span class="num">'+x.qty+' × '+esc(m.u)+' · giá <input class="price-in num" type="number" step="0.01" min="0" inputmode="decimal" data-gp="'+esc(x.k)+'" value="'+gPrice(x).toFixed(2)+'" aria-label="Giá '+esc(m.n)+'"> €</span></div>'+
+    '<div class="r"><span class="qty"><button class="btn ghost sm" type="button" data-gq="'+esc(x.k)+':-1" aria-label="Bớt">−</button><b>'+x.qty+'</b><button class="btn ghost sm" type="button" data-gq="'+esc(x.k)+':1" aria-label="Thêm">+</button></span>'+
+    '<span class="amt num">'+eur(gPrice(x)*x.qty)+'</span><button class="btn '+(armedG===x.k?"danger":"ghost")+' sm" type="button" data-gdel="'+esc(x.k)+'">'+(armedG===x.k?"Bỏ ra?":"Bỏ")+'</button></div></div>';}).join("")
+    :emptyBox("Giỏ đang trống. Bấm vào các món ở trên để bỏ vào giỏ.");
+}
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-gk]");
+  if(o){const k=o.dataset.gk, it=state.grocery.find(x=>x.k===k);
+    if(it)it.qty+=1;else state.grocery.push({k,qty:1,price:null});
+    persistGrocery();renderGrocery();toast("+ "+GMAP[k].n+" ("+GMAP[k].u+")");return;}
+  const q=e.target.closest("[data-gq]");
+  if(q){const[k,d]=q.dataset.gq.split(":");const it=state.grocery.find(x=>x.k===k);if(it){it.qty=Math.max(1,it.qty+Number(d));persistGrocery();renderGrocery();}return;}
+  const b=e.target.closest("[data-gdel]");if(!b)return;const k=b.dataset.gdel;
+  if(armedG!==k){armedG=k;clearTimeout(armGTimer);armGTimer=setTimeout(()=>{armedG=null;renderGrocery();},3500);renderGrocery();return;}
+  armedG=null;state.grocery=state.grocery.filter(x=>x.k!==k);persistGrocery();renderGrocery();});
+document.addEventListener("change",e=>{const inp=e.target.closest("[data-gp]");if(!inp)return;
+  const it=state.grocery.find(x=>x.k===inp.dataset.gp);const v=parseFloat(String(inp.value).replace(",","."));
+  if(it&&v>=0){it.price=Math.round(v*100)/100;persistGrocery();renderGrocery();toast("Đã lưu giá mới");}});
+
 /* ---------------- reserve fund (thermometer) ---------------- */
 const RESERVE=250;
 let armedR=null, armRTimer=null;
@@ -856,7 +959,7 @@ document.addEventListener("click",e=>{
 
 /* ---------------- export / import ---------------- */
 $("expBtn").addEventListener("click",async()=>{
-  const json=JSON.stringify({app:"ve-que-an-tet",version:1,exportedAt:new Date().toISOString(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits},null,2);
+  const json=JSON.stringify({app:"ve-que-an-tet",version:1,exportedAt:new Date().toISOString(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery},null,2);
   let dl=null;try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads");}catch(e){}
   if(dl){try{await dl.save({filename:"ve-que-an-tet-"+dKey(new Date())+".json",data:json});toast("Đã xuất dữ liệu");return;}
     catch(err){if(err&&err.code==="declined"){toast("Đã huỷ xuất dữ liệu");return;}if(err&&err.code==="rate_limited"){toast("Đợi một chút rồi thử lại");return;}}}
@@ -878,7 +981,8 @@ $("impFile").addEventListener("change",e=>{
       const reserve=Array.isArray(o.reserve)?o.reserve.filter(x=>x&&+x.amount>0).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,date:String(x.date||dKey(new Date())),note:String(x.note||"").slice(0,80)})):[];
       const dep=a=>Array.isArray(a)?a.filter(x=>x&&+x.amount>0).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,date:String(x.date||dKey(new Date()))})):[];
       const deposits={travel:dep(o.deposits&&o.deposits.travel),gift:dep(o.deposits&&o.deposits.gift)};
-      pending={settings:{balance:+o.settings.balance||0,travel:+o.settings.travel||0},months,reserve,deposits};
+      const grocery=Array.isArray(o.grocery)?o.grocery.filter(x=>x&&GMAP[x.k]).map(x=>({k:x.k,qty:Math.max(1,parseInt(x.qty,10)||1),price:x.price==null?null:+x.price})):[];
+      pending={settings:{balance:+o.settings.balance||0,travel:+o.settings.travel||0},months,reserve,deposits,grocery};
       $("impMsg").textContent="File có "+n+" khoản chi, số dư "+eur(pending.settings.balance)+". Thay toàn bộ dữ liệu hiện tại bằng file này?";
       $("impConfirm").hidden=false;
     }catch(err){toast("File không đúng định dạng của trang này");}};
@@ -887,7 +991,7 @@ $("impFile").addEventListener("change",e=>{
 $("impNo").addEventListener("click",()=>{pending=null;$("impConfirm").hidden=true;});
 $("impYes").addEventListener("click",()=>{if(!pending)return;
   const keys=new Set([...Object.keys(state.months),...Object.keys(pending.months)]);
-  state=pending;pending=null;persist([...keys],true);persistReserve();persistDeposits();$("impConfirm").hidden=true;resetForm();renderAll();toast("Đã nhập dữ liệu");});
+  state=pending;pending=null;persist([...keys],true);persistReserve();persistDeposits();persistGrocery();$("impConfirm").hidden=true;resetForm();renderAll();toast("Đã nhập dữ liệu");});
 
 /* ---------------- nav ---------------- */
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.v)));
@@ -912,7 +1016,7 @@ function tick(){cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.lif
 let tt=0;function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2200);}
 
 /* ---------------- boot ---------------- */
-function renderAll(){renderReserve();renderQuest();renderEnergy();renderStats();renderLog();}
+function renderAll(){renderReserve();renderGrocery();renderQuest();renderEnergy();renderStats();renderLog();}
 try{const v=localStorage.getItem("vqat-view");if(v==="day"||v==="week"||v==="month")view=v;}catch(e){}
 renderStrip();renderCats();resetForm();
 document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.v===view)));
