@@ -623,6 +623,10 @@ function renderEnergy(){
        '<div class="en-bar" role="meter" aria-label="Ăn sáng" aria-valuemin="0" aria-valuemax="'+PERSONAL+'" aria-valuenow="'+sa.toFixed(2)+'"><i style="width:'+w+'%;background:#FFE08A"></i></div>'+
        '<div class="note" style="margin-top:4px">Chưa có mức tối đa riêng, tính vào chi tiêu cá nhân.</div></div>'; }
   CATS.filter(c=>c.b&&c.k!=="antrua").forEach(c=>{h+=bar(c);});
+  { const kh=sum(items.filter(x=>x.cat==="khac")), w=Math.min(100,kh/PERSONAL*100);
+    h+='<div><div class="en-top"><div>Khác</div><span class="num">'+eur(kh)+' · '+Math.round(kh/PERSONAL*100)+'% của '+eur(PERSONAL)+'</span></div>'+
+       '<div class="en-bar" role="meter" aria-label="Khác" aria-valuemin="0" aria-valuemax="'+PERSONAL+'" aria-valuenow="'+kh.toFixed(2)+'"><i style="width:'+w+'%;background:#C9B8FF"></i></div>'+
+       '<div class="note" style="margin-top:4px">Chưa có mức tối đa riêng, tính vào chi tiêu cá nhân.</div></div>'; }
   { const GM=50, q=sum(items.filter(x=>x.cat==="quacap")), l=level(q,GM), w=Math.min(100,q/GM*100);
     h+='<div><div class="en-top"><div>Quà cáp<span class="pill '+l+'">'+pillTxt(l)+'</span></div><span class="num">'+eur(q)+' / '+eur(GM)+'</span></div>'+
        '<div class="en-bar" role="meter" aria-label="Quà cáp" aria-valuemin="0" aria-valuemax="'+GM+'" aria-valuenow="'+q.toFixed(2)+'"><i class="'+(l==="ok"?"":l)+'" style="width:'+w+'%"></i></div>'+
