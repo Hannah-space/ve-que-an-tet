@@ -367,6 +367,15 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
 
 .invest .bar .fill{background:repeating-linear-gradient(-45deg,#FFD23F 0 12px,#FFE58A 12px 24px);background-size:34px 34px}
 
+/* journal */
+.jr-form{gap:8px}
+.jr-form textarea{min-height:64px;font-family:var(--f-body);font-weight:700;font-size:15px;resize:vertical}
+.jr-list{margin-top:10px;max-height:280px;overflow-y:auto;padding-right:2px}
+.jr-item{display:block}
+.jr-item .jr-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.jr-item .jr-date{font-size:12px;font-weight:900;color:var(--tile-sub)}
+.jr-item p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:700;color:var(--tile-ink)}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
@@ -677,6 +686,16 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
         <div class="log" id="log"></div>
       </div>
 
+      <div class="card journal-card">
+        <h2>Nhật ký chi tiêu <span class="label" style="margin-left:auto">ghi chú nhỏ</span></h2>
+        <form id="jrForm" novalidate class="jr-form">
+          <label class="sr" for="jrText">Ghi chú hôm nay</label>
+          <textarea id="jrText" maxlength="400" rows="2" placeholder="Hôm nay mình để ý… (vd: đi siêu thị khi đói là mua lố)"></textarea>
+          <div class="form-actions"><button class="btn sm" type="submit">+ Lưu ghi chú</button></div>
+        </form>
+        <div class="log jr-list" id="jrList"></div>
+      </div>
+
       <div class="card">
         <h2>Sao lưu dữ liệu</h2>
         <div class="data-row">
@@ -756,13 +775,13 @@ const pb=d=>PERSONAL;
 
 /* ---------------- state + storage ---------------- */
 const LS_KEY="vqat-v1";
-let state={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[]};
+let state={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[],journal:[]};
 let db=null, uid=null, mode="local";
 const SEED={"settings": {"balance": 1500, "travel": 0}, "months": {"2026-10": [{"amount": 1.2, "cat": "ansang", "date": "2026-10-13", "id": "mv6s66n0xeqz", "note": ""}, {"amount": 80, "cat": "khac", "date": "2026-10-08", "id": "mv6schshyk8s", "note": "TGV Max"}, {"amount": 24, "cat": "khac", "date": "2026-10-08", "id": "mv6sbl8x2rek", "note": "Capcut"}, {"amount": 2.15, "cat": "ansang", "date": "2026-10-08", "id": "mv6selwsry69", "note": ""}, {"amount": 8, "cat": "sieuthi", "date": "2026-10-08", "id": "mv6serqcoikj", "note": ""}, {"amount": 10, "cat": "sieuthi", "date": "2026-10-09", "id": "mv6sf2ta6n0e", "note": ""}, {"amount": 3.77, "cat": "sieuthi", "date": "2026-10-09", "id": "mv6sfusdgj4o", "note": ""}, {"amount": 10, "cat": "thethao", "date": "2026-10-13", "id": "mv6sg0l1y67w", "note": ""}, {"amount": 30, "cat": "antrua", "date": "2026-10-13", "id": "mv6sh7un6i8f", "note": ""}]}, "reserve": [], "deposits": {"travel": [], "gift": []}};
-function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r){const o=JSON.parse(r);if(o&&o.settings&&o.months){if(!Array.isArray(o.reserve))o.reserve=[];if(!Array.isArray(o.grocery))o.grocery=[];o.grocery=o.grocery.filter(x=>x&&x.k);if(!o.deposits||typeof o.deposits!=="object")o.deposits={travel:[],gift:[]};
+function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r){const o=JSON.parse(r);if(o&&o.settings&&o.months){if(!Array.isArray(o.reserve))o.reserve=[];if(!Array.isArray(o.grocery))o.grocery=[];if(!Array.isArray(o.journal))o.journal=[];o.grocery=o.grocery.filter(x=>x&&x.k);if(!o.deposits||typeof o.deposits!=="object")o.deposits={travel:[],gift:[]};
       try{if(!localStorage.getItem("vqat-seed1")){for(const mk in SEED.months){const have=new Set((o.months[mk]||[]).map(x=>x.id));o.months[mk]=(o.months[mk]||[]).concat(SEED.months[mk].filter(x=>!have.has(x.id)));}
         localStorage.setItem("vqat-seed1","1");localStorage.setItem(LS_KEY,JSON.stringify(o));}}catch(e){}
-      return o;}}}catch(e){}try{localStorage.setItem("vqat-seed1","1");}catch(e){}return Object.assign({grocery:[]},JSON.parse(JSON.stringify(SEED)));}
+      return o;}}}catch(e){}try{localStorage.setItem("vqat-seed1","1");}catch(e){}return Object.assign({grocery:[],journal:[]},JSON.parse(JSON.stringify(SEED)));}
 function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));if(!GH.applying)localStorage.setItem("vqat-ts",String(Date.now()));}catch(e){}if(!GH.applying)ghSchedule();}
 /* ---------------- GitHub Gist sync ---------------- */
 const GH={token:null,gist:null,timer:null,busy:false,applying:false,last:null};
@@ -771,7 +790,7 @@ function ghLoad(){try{GH.token=localStorage.getItem("vqat-gh-token");GH.gist=loc
 function ghSave(){try{if(GH.token)localStorage.setItem("vqat-gh-token",GH.token);else localStorage.removeItem("vqat-gh-token");if(GH.gist)localStorage.setItem("vqat-gh-gist",GH.gist);else localStorage.removeItem("vqat-gh-gist");}catch(e){}}
 function localTs(){try{return Number(localStorage.getItem("vqat-ts")||0);}catch(e){return 0;}}
 function ghHeaders(){return {"Authorization":"Bearer "+GH.token,"Accept":"application/vnd.github+json","Content-Type":"application/json"};}
-function ghPayload(){return JSON.stringify({app:"ve-que-an-tet",updatedAt:localTs()||Date.now(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery});}
+function ghPayload(){return JSON.stringify({app:"ve-que-an-tet",updatedAt:localTs()||Date.now(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery,journal:state.journal});}
 function ghStatus(t,ok){const el=document.getElementById("ghStatus");if(el)el.textContent=t;
   const on=!!(GH.token&&GH.gist);const f=document.getElementById("ghForm");if(f)f.hidden=on;
   ["ghSyncNow","ghLogout"].forEach(id=>{const b=document.getElementById(id);if(b)b.hidden=!on;});
@@ -781,7 +800,7 @@ async function ghFetch(path,opt){const res=await fetch(GH_API+path,Object.assign
   if(res.status===401||res.status===403)throw new Error("auth");if(!res.ok)throw new Error("http "+res.status);return res.json();}
 function ghApply(remote){
   const norm={settings:remote.settings||{balance:START,travel:0},months:remote.months||{},reserve:Array.isArray(remote.reserve)?remote.reserve:[],
-    deposits:remote.deposits&&typeof remote.deposits==="object"?{travel:remote.deposits.travel||[],gift:remote.deposits.gift||[],invest:remote.deposits.invest||[]}:{travel:[],gift:[]},grocery:Array.isArray(remote.grocery)?remote.grocery.filter(x=>x&&x.k):[]};
+    deposits:remote.deposits&&typeof remote.deposits==="object"?{travel:remote.deposits.travel||[],gift:remote.deposits.gift||[],invest:remote.deposits.invest||[]}:{travel:[],gift:[]},grocery:Array.isArray(remote.grocery)?remote.grocery.filter(x=>x&&x.k):[],journal:Array.isArray(remote.journal)?remote.journal:[]};
   GH.applying=true;state=norm;saveLocal();try{localStorage.setItem("vqat-ts",String(remote.updatedAt||Date.now()));}catch(e){}GH.applying=false;renderAll();}
 function ghSchedule(){if(!GH.token||!GH.gist)return;clearTimeout(GH.timer);GH.timer=setTimeout(ghPush,1200);}
 async function ghPush(){if(!GH.token||!GH.gist||GH.busy)return;GH.busy=true;
@@ -803,7 +822,7 @@ async function ghConnect(){const t=$("ghToken").value.trim();if(!t){toast("Dán 
     else{const g=await ghFetch("/gists",{method:"POST",body:JSON.stringify({description:"Về Quê Ăn Tết – dữ liệu chi tiêu",public:false,files:{[GH_FILE]:{content:ghPayload()}}})});
       GH.gist=g.id;ghSave();$("ghToken").value="";ghStatus("Đã tạo kho dữ liệu riêng tư trên GitHub và đồng bộ.",true);toast("Đã kết nối GitHub");}}
   catch(e){GH.token=null;GH.gist=null;ghSave();ghStatus(e.message==="auth"?"Token không đúng hoặc thiếu quyền gist.":"Không kết nối được GitHub. Kiểm tra mạng rồi thử lại.",false);}}
-function hasData(s){return s&&((s.grocery||[]).length||(s.reserve||[]).length||(s.deposits&&((s.deposits.travel||[]).length||(s.deposits.gift||[]).length))||Object.keys(s.months||{}).some(k=>(s.months[k]||[]).length)||s.settings.balance!==START||s.settings.travel!==0);}
+function hasData(s){return s&&((s.journal||[]).length||(s.grocery||[]).length||(s.reserve||[]).length||(s.deposits&&((s.deposits.travel||[]).length||(s.deposits.gift||[]).length))||Object.keys(s.months||{}).some(k=>(s.months[k]||[]).length)||s.settings.balance!==START||s.settings.travel!==0);}
 const queues={};
 function enqueue(key,fn){const p=(queues[key]||Promise.resolve()).then(fn).catch(err=>{
   if(err&&err.code==="quota_exceeded")toast("Bộ nhớ đã đầy, hãy xuất dữ liệu và xoá bớt");
@@ -842,11 +861,12 @@ async function initStore(){
   db=d;uid=id;mode="db";setSync("db");
   let first=true;
   db.collection("data/users/"+uid).onSnapshot(snap=>{
-    if(first){first=false;if(snap.empty){if(hasData(state)){persist(Object.keys(state.months),true);persistReserve();persistDeposits();persistGrocery();}return;}}
-    const next={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[]};
+    if(first){first=false;if(snap.empty){if(hasData(state)){persist(Object.keys(state.months),true);persistReserve();persistDeposits();persistGrocery();persistJournal();}return;}}
+    const next={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[],journal:[]};
     snap.docs.forEach(doc=>{const v=doc.data()||{};
       if(doc.id==="settings"){next.settings={balance:+v.balance||0,travel:+v.travel||0};}
       else if(doc.id==="deposits"){next.deposits={travel:Array.isArray(v.travel)?v.travel.map(x=>Object.assign({},x)):[],gift:Array.isArray(v.gift)?v.gift.map(x=>Object.assign({},x)):[],invest:Array.isArray(v.invest)?v.invest.map(x=>Object.assign({},x)):[]};}
+      else if(doc.id==="journal"&&Array.isArray(v.items)){next.journal=v.items.map(x=>Object.assign({},x));}
       else if(doc.id==="grocery"&&Array.isArray(v.items)){next.grocery=v.items.filter(x=>x&&x.k).map(x=>Object.assign({},x));}
       else if(doc.id==="reserve"&&Array.isArray(v.items)){next.reserve=v.items.map(x=>Object.assign({},x));}
       else if(doc.id.indexOf("m-")===0&&Array.isArray(v.items)){next.months[doc.id.slice(2)]=v.items.map(x=>Object.assign({},x));}
@@ -1046,6 +1066,30 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ddel]");if
   armedD=null;const[fund,id]=dk.split(":");state.deposits[fund]=(state.deposits[fund]||[]).filter(x=>x.id!==id);persistDeposits();renderQuest();toast("Đã xoá");});
 
 
+
+/* ---------------- journal ---------------- */
+let armedJ=null, armJTimer=null;
+function persistJournal(){
+  saveLocal();
+  if(mode!=="db")return;
+  const items=(state.journal||[]).map(x=>({id:x.id,date:x.date,text:x.text}));
+  enqueue("journal",()=>db.collection("data/users/"+uid).doc("journal").set({items}));
+}
+function renderJournal(){
+  const items=[...(state.journal||[])].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1));
+  $("jrList").innerHTML=items.length?items.map(x=>{const d=parseD(x.date);
+    return '<div class="item jr-item"><div class="jr-top"><span class="jr-date num">'+DOW[d.getDay()]+' '+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+'</span>'+
+      '<button class="btn '+(armedJ===x.id?"danger":"ghost")+' sm" type="button" data-jdel="'+esc(x.id)+'">'+(armedJ===x.id?"Xoá thật?":"Xoá")+'</button></div><p>'+esc(x.text)+'</p></div>';}).join("")
+    :emptyBox("Chưa có ghi chú nào. Viết một dòng về thói quen chi tiêu hôm nay nhé.");
+}
+$("jrForm").addEventListener("submit",e=>{e.preventDefault();const t=$("jrText").value.trim().slice(0,400);
+  if(!t){$("jrText").focus();return;}
+  (state.journal=state.journal||[]).push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:dKey(new Date()),text:t});
+  persistJournal();$("jrText").value="";renderJournal();toast("Đã lưu ghi chú");});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-jdel]");if(!b)return;const id=b.dataset.jdel;
+  if(armedJ!==id){armedJ=id;clearTimeout(armJTimer);armJTimer=setTimeout(()=>{armedJ=null;renderJournal();},3500);renderJournal();return;}
+  armedJ=null;state.journal=(state.journal||[]).filter(x=>x.id!==id);persistJournal();renderJournal();toast("Đã xoá ghi chú");});
+
 /* ---------------- grocery basket ---------------- */
 const GROCERY=[
   {g:"Thịt & trứng",items:[["heo","Thịt heo","1 kg",8.50,"#FF9ACB"],["ga","Thịt gà (ức)","1 kg",11.90,"#FFE08A"],["bo","Thịt bò xay","1 kg",13.90,"#FF4D6D"],["trung","Trứng","hộp 12 quả",3.60,"#FFD23F"]]},
@@ -1220,7 +1264,7 @@ document.addEventListener("click",e=>{
 
 /* ---------------- export / import ---------------- */
 $("expBtn").addEventListener("click",async()=>{
-  const json=JSON.stringify({app:"ve-que-an-tet",version:1,exportedAt:new Date().toISOString(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery},null,2);
+  const json=JSON.stringify({app:"ve-que-an-tet",version:1,exportedAt:new Date().toISOString(),settings:state.settings,months:state.months,reserve:state.reserve,deposits:state.deposits,grocery:state.grocery,journal:state.journal},null,2);
   let dl=null;try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads");}catch(e){}
   if(dl){try{await dl.save({filename:"ve-que-an-tet-"+dKey(new Date())+".json",data:json});toast("Đã xuất dữ liệu");return;}
     catch(err){if(err&&err.code==="declined"){toast("Đã huỷ xuất dữ liệu");return;}if(err&&err.code==="rate_limited"){toast("Đợi một chút rồi thử lại");return;}}}
@@ -1243,7 +1287,8 @@ $("impFile").addEventListener("change",e=>{
       const dep=a=>Array.isArray(a)?a.filter(x=>x&&+x.amount>0).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,date:String(x.date||dKey(new Date()))})):[];
       const deposits={travel:dep(o.deposits&&o.deposits.travel),gift:dep(o.deposits&&o.deposits.gift),invest:dep(o.deposits&&o.deposits.invest)};
       const grocery=Array.isArray(o.grocery)?o.grocery.filter(x=>x&&GMAP[x.k]).map(x=>({k:x.k,qty:Math.max(1,parseInt(x.qty,10)||1),price:x.price==null?null:+x.price})):[];
-      pending={settings:{balance:+o.settings.balance||0,travel:+o.settings.travel||0},months,reserve,deposits,grocery};
+      const journal=Array.isArray(o.journal)?o.journal.filter(x=>x&&x.text).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),date:String(x.date||dKey(new Date())),text:String(x.text).slice(0,400)})):[];
+      pending={settings:{balance:+o.settings.balance||0,travel:+o.settings.travel||0},months,reserve,deposits,grocery,journal};
       $("impMsg").textContent="File có "+n+" khoản chi, số dư "+eur(pending.settings.balance)+". Thay toàn bộ dữ liệu hiện tại bằng file này?";
       $("impConfirm").hidden=false;
     }catch(err){toast("File không đúng định dạng của trang này");}};
@@ -1252,7 +1297,7 @@ $("impFile").addEventListener("change",e=>{
 $("impNo").addEventListener("click",()=>{pending=null;$("impConfirm").hidden=true;});
 $("impYes").addEventListener("click",()=>{if(!pending)return;
   const keys=new Set([...Object.keys(state.months),...Object.keys(pending.months)]);
-  state=pending;pending=null;persist([...keys],true);persistReserve();persistDeposits();persistGrocery();$("impConfirm").hidden=true;resetForm();renderAll();toast("Đã nhập dữ liệu");});
+  state=pending;pending=null;persist([...keys],true);persistReserve();persistDeposits();persistGrocery();persistJournal();$("impConfirm").hidden=true;resetForm();renderAll();toast("Đã nhập dữ liệu");});
 
 /* ---------------- nav ---------------- */
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.v)));
@@ -1277,7 +1322,7 @@ function tick(){cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.lif
 let tt=0;function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2200);}
 
 /* ---------------- boot ---------------- */
-function renderAll(){renderReserve();renderGrocery();renderQuest();renderEnergy();renderStats();renderLog();}
+function renderAll(){renderReserve();renderGrocery();renderJournal();renderQuest();renderEnergy();renderStats();renderLog();}
 try{const v=localStorage.getItem("vqat-view");if(v==="day"||v==="week"||v==="month")view=v;}catch(e){}
 renderStrip();renderCats();resetForm();
 document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.v===view)));
