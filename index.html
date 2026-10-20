@@ -720,12 +720,12 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
 const TARGET=3320, START=1300, MONTHLY=404, LEVEL_STEP=500;
 const PLAN_END_Y=2027, PLAN_END_M=1; // Feb 2027 (0-based month)
 const TRAVEL_TARGET=400, TRAVEL_MONTHLY=80;
-const INCOME=1470, PERSONAL=215;
+const INCOME=1470, PERSONAL=200;
 const NEED=["ansang","sieuthi","antrua"], PERS=["muasam","nhahang","thethao","quacap","dulich","khac"];
 const TET=new Date(2027,2,5);
 const BUDGET=[
   ["Tiền nhà",502,"#8F7BEA"],["Tiết kiệm",404,"#2EE6C5"],["Gửi mẹ",200,"#FF6FB5"],["Quỹ du lịch",60,"#7FA8FF"],
-  ["Đi lại",26,"#C9B8FF"],["Quỹ quà cáp",25,"#FF9ACB"],["Đầu tư CCQ",20,"#FFD23F"],["Claude",18,"#D97757"],["Chi tiêu (cần thiết + cá nhân)",215,"#FFD23F"]
+  ["Đi lại",26,"#C9B8FF"],["Quỹ quà cáp",25,"#FF9ACB"],["Đầu tư CCQ",20,"#FFD23F"],["Claude",18,"#D97757"],["Tiền điện thoại",15,"#7FE3F0"],["Chi tiêu (cần thiết + cá nhân)",200,"#FFD23F"]
 ];
 const CATS=[
   {k:"ansang",n:"Ăn sáng",b:15,c:"#FFE08A",a:"AS"},
@@ -969,8 +969,8 @@ function renderStats(){
     if(total>0){h+='<div class="donut-row">'+donut(segs,total)+'<div class="legend">'+segs.map(x=>'<div><span class="sw" style="background:'+x.c.c+'"></span>'+esc(x.c.n)+'<em>'+eur(x.v)+' · '+Math.round(x.v/total*100)+'%</em></div>').join("")+'</div></div>';}
     else h+=emptyBox("Tháng này chưa có khoản chi nào.");
     const ms=[...Array(6)].map((_,i)=>new Date(cursor.getFullYear(),cursor.getMonth()-5+i,1));
-    h+='<div class="sub-h">So sánh 6 tháng</div><div class="chart">'+barChart(ms.map(d=>({lab:"T"+(d.getMonth()+1),sub:String(d.getFullYear()).slice(2),v:sum(monthItems(mKey(d)).filter(isPersonal)),hi:mKey(d)===mk})),215,"215 €")+'</div>'+
-       '<div class="note">Tổng chi mỗi tháng so với ngân sách 215 €.</div>';
+    h+='<div class="sub-h">So sánh 6 tháng</div><div class="chart">'+barChart(ms.map(d=>({lab:"T"+(d.getMonth()+1),sub:String(d.getFullYear()).slice(2),v:sum(monthItems(mKey(d)).filter(isPersonal)),hi:mKey(d)===mk})),200,"200 €")+'</div>'+
+       '<div class="note">Tổng chi mỗi tháng so với ngân sách 200 €.</div>';
     body.innerHTML=h;
   }
 }
