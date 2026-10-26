@@ -376,6 +376,13 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
 .jr-item .jr-date{font-size:12px;font-weight:900;color:var(--tile-sub)}
 .jr-item p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:700;color:var(--tile-ink)}
 
+/* SG total */
+.sg-total{font-size:clamp(30px,6vw,42px);color:#7FE3F0;text-shadow:0 0 16px rgba(127,227,240,.6)}
+.sg-strip{display:flex;height:18px;border:3px solid var(--line);border-radius:999px;overflow:hidden;background:var(--line);box-shadow:0 0 14px rgba(127,227,240,.35)}
+.sg-strip i{display:block;height:100%}
+.sg-rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+.sg-rows .stat b{display:flex;align-items:center;gap:6px}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
@@ -561,6 +568,15 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
       </div>
       <div class="sub-h">Đã chi từ quỹ</div>
       <div class="log" id="resLog"></div>
+    </div>
+    <div class="card sg-card">
+      <svg class="corner-mush" viewBox="0 0 60 64" aria-hidden="true" style="color:#2EE6C5"><use href="#sym-mush"/></svg>
+      <div class="label">Tổng tiền thực tế</div>
+      <h2 style="margin-top:2px">SG</h2>
+      <div class="xp-amount num sg-total" id="sgTotal">0,00 €</div>
+      <div class="note" style="margin:2px 0 10px">Thực tiền trong NỔ HŨ + Quỹ du lịch + Quỹ quà cáp</div>
+      <div class="sg-strip" id="sgStrip"></div>
+      <div class="sg-rows" id="sgRows"></div>
     </div>
    </div>
     <div class="col" style="gap:16px">
@@ -896,6 +912,14 @@ const FUND_CREDITS=[["2026-10-01",60,25],["2026-11-01",60,25],["2026-12-01",60,2
 function computed(){const t=dKey(new Date());let b=START,tr=0,next=null;
   let g=GIFT_FUND,inv=200;CREDITS.forEach(c=>{if(c[0]<=t){b+=c[1];inv+=20;}else if(!next)next=c;});
   FUND_CREDITS.forEach(c=>{if(c[0]<=t){tr+=c[1];g+=c[2];}});return{b,tr,g,inv,next};}
+
+function renderSG(){
+  const D=state.deposits||{}, nohu=START+sum(D.nohu||[]), trav=sum(D.travel||[]), gift=sum(D.gift||[]), tot=nohu+trav+gift;
+  $("sgTotal").textContent=eur(tot);
+  const parts=[["NỔ HŨ",nohu,"#2EE6C5"],["Quỹ du lịch",trav,"#7FA8FF"],["Quỹ quà cáp",gift,"#FF9ACB"]];
+  $("sgStrip").innerHTML=parts.map(p=>'<i style="width:'+(tot?p[1]/tot*100:0)+'%;background:'+p[2]+'"></i>').join("");
+  $("sgRows").innerHTML=parts.map(p=>'<div class="stat"><b class="num"><span class="sw" style="background:'+p[2]+'"></span>'+eur(p[1])+'</b><span>'+p[0]+(tot?' · '+Math.round(p[1]/tot*100)+'%':'')+'</span></div>').join("");
+}
 function renderQuest(){
   const comp=computed();
   const nohuDeps=(state.deposits&&state.deposits.nohu)||[];
@@ -925,6 +949,7 @@ function renderQuest(){
   t+='<span class="'+(bal>=TARGET?"on":"")+'" style="left:calc(100% - 14px)">Tết</span>';
   $("ticks").innerHTML=t;
   renderFund("inv","invest",comp.inv,300,null);
+  renderSG();
   renderFund("trav","travel",comp.tr,400,null);
   renderFund("gift","gift",comp.g,125,null);
   const days=Math.ceil((TET-new Date(new Date().toDateString()))/864e5);
