@@ -619,7 +619,7 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
     <div class="card travel gift">
       <div class="label">Quỹ phụ</div>
       <h2 style="margin-top:2px">Quỹ quà cáp</h2>
-      <div class="label" style="margin-top:8px;font-size:11px">Thực tế đã bỏ vào</div><div class="xp-amount num" style="font-size:28px"><span id="giftTxt">0,00 €</span> <span class="of">/ 125,00 € mục tiêu</span></div>
+      <div class="label" style="margin-top:8px;font-size:11px">Thực tế đã bỏ vào</div><div class="xp-amount num" style="font-size:28px"><span id="giftTxt">0,00 €</span> <span class="of">/ 225,00 € mục tiêu</span></div>
       <div class="bar"><div class="fill" id="giftFill" style="width:0%"></div><div class="pct num" id="giftPct">0%</div></div>
       <div class="fund-stats">
         <div class="stat"><b class="num" id="giftPlan">0,00 €</b><span>kế hoạch đến nay</span></div>
@@ -632,7 +632,7 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
         <button class="btn sm" type="submit">+ Ghi</button>
       </form>
       <div class="log dep-log" id="giftLog"></div>
-      <p class="note" style="font-size:13px">Kế hoạch: bắt đầu 0 €, tự cộng +25 € vào mùng 1 mỗi tháng, đủ 125 € vào 01/02/2027.</p>
+      <p class="note" style="font-size:13px">Kế hoạch: bắt đầu 0 €, tự cộng +25 € vào mùng 1 mỗi tháng, được 125 € vào 01/02/2027 (mục tiêu 225 €).</p>
     </div>
     </div>
   </section>
@@ -951,7 +951,7 @@ function renderQuest(){
   renderFund("inv","invest",comp.inv,300,null);
   renderSG();
   renderFund("trav","travel",comp.tr,400,null);
-  renderFund("gift","gift",comp.g,125,null);
+  renderFund("gift","gift",comp.g,225,null);
   const days=Math.ceil((TET-new Date(new Date().toDateString()))/864e5);
   $("tetChip").textContent=days>0?"Còn "+days+" ngày đến 05/03/2027":days===0?"Hôm nay là 05/03/2027!":"Đã qua 05/03/2027";
   if(bal>=TARGET&&!celebrated){celebrated=true;fireworks(7);}
