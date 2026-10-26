@@ -532,9 +532,15 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
       <div class="xp-stats">
         <div class="stat"><b class="num" id="missTxt">2 490,00 €</b><span>còn thiếu</span></div>
         <div class="stat"><b class="num" id="nextLvTxt">500,00 €</b><span id="nextLvLbl">nữa lên Lv 4</span></div>
-        <div class="stat"><b class="num" id="projTxt">+404,00 €</b><span id="projLbl">tự cộng ngày 31/10</span></div>
+        <div class="stat"><b class="num" id="projTxt">+404,00 €</b><span id="projLbl">kế hoạch đến nay</span></div>
       </div>
-      <p class="note" style="font-size:13px">Số dư tự động tăng vào ngày cuối mỗi tháng: mỗi tháng cộng 404 €, từ tháng 10/2026 đến tháng 2/2027.</p>
+      <p class="note" style="font-size:13px">Số lớn ở trên là tiền <b>thực tế</b>: 1 300 € ban đầu cộng các lần Hannah ghi bên dưới. Kế hoạch: +404 € vào cuối mỗi tháng, từ 10/2026 đến 02/2027.</p>
+      <form class="dep-form" data-fund="nohu" novalidate>
+        <label class="sr" for="nohuDep">Số tiền thực tế bỏ vào NỔ HŨ</label>
+        <div class="money"><input id="nohuDep" type="number" step="0.01" min="0" inputmode="decimal" placeholder="Tiền bỏ vào NỔ HŨ"></div>
+        <button class="btn sm" type="submit">+ Ghi</button>
+      </form>
+      <div class="log dep-log" id="nohuLog"></div>
     </div>
 
     <div class="card reserve">
@@ -747,9 +753,9 @@ const BUDGET=[
   ["Đi lại",26,"#C9B8FF"],["Quỹ quà cáp",25,"#FF9ACB"],["Đầu tư CCQ",20,"#FFD23F"],["Claude",18,"#D97757"],["Tiền điện thoại",15,"#7FE3F0"],["Chi tiêu (cần thiết + cá nhân)",200,"#FFD23F"]
 ];
 const CATS=[
-  {k:"ansang",n:"Ăn sáng",b:15,c:"#FFE08A",a:"AS"},
-  {k:"antrua",n:"Ăn trưa",b:60,c:"#8F7BEA",a:"AT"},
-  {k:"sieuthi",n:"Siêu thị",b:55,c:"#2EE6C5",a:"ST"},
+  {k:"ansang",n:"Ăn sáng",b:10,c:"#FFE08A",a:"AS"},
+  {k:"antrua",n:"Ăn trưa",b:50,c:"#8F7BEA",a:"AT"},
+  {k:"sieuthi",n:"Siêu thị",b:60,c:"#2EE6C5",a:"ST"},
   {k:"nhahang",n:"Ăn nhà hàng",b:null,c:"#FFB547",a:"NH"},
   {k:"muasam",n:"Mua sắm",b:null,c:"#FF6FB5",a:"MS"},
   {k:"thethao",n:"Thể thao",b:null,c:"#9BE15D",a:"TT"},
@@ -800,7 +806,7 @@ async function ghFetch(path,opt){const res=await fetch(GH_API+path,Object.assign
   if(res.status===401||res.status===403)throw new Error("auth");if(!res.ok)throw new Error("http "+res.status);return res.json();}
 function ghApply(remote){
   const norm={settings:remote.settings||{balance:START,travel:0},months:remote.months||{},reserve:Array.isArray(remote.reserve)?remote.reserve:[],
-    deposits:remote.deposits&&typeof remote.deposits==="object"?{travel:remote.deposits.travel||[],gift:remote.deposits.gift||[],invest:remote.deposits.invest||[]}:{travel:[],gift:[]},grocery:Array.isArray(remote.grocery)?remote.grocery.filter(x=>x&&x.k):[],journal:Array.isArray(remote.journal)?remote.journal:[]};
+    deposits:remote.deposits&&typeof remote.deposits==="object"?{travel:remote.deposits.travel||[],gift:remote.deposits.gift||[],invest:remote.deposits.invest||[],nohu:remote.deposits.nohu||[]}:{travel:[],gift:[]},grocery:Array.isArray(remote.grocery)?remote.grocery.filter(x=>x&&x.k):[],journal:Array.isArray(remote.journal)?remote.journal:[]};
   GH.applying=true;state=norm;saveLocal();try{localStorage.setItem("vqat-ts",String(remote.updatedAt||Date.now()));}catch(e){}GH.applying=false;renderAll();}
 function ghSchedule(){if(!GH.token||!GH.gist)return;clearTimeout(GH.timer);GH.timer=setTimeout(ghPush,1200);}
 async function ghPush(){if(!GH.token||!GH.gist||GH.busy)return;GH.busy=true;
@@ -865,7 +871,7 @@ async function initStore(){
     const next={settings:{balance:START,travel:0},months:{},reserve:[],deposits:{travel:[],gift:[]},grocery:[],journal:[]};
     snap.docs.forEach(doc=>{const v=doc.data()||{};
       if(doc.id==="settings"){next.settings={balance:+v.balance||0,travel:+v.travel||0};}
-      else if(doc.id==="deposits"){next.deposits={travel:Array.isArray(v.travel)?v.travel.map(x=>Object.assign({},x)):[],gift:Array.isArray(v.gift)?v.gift.map(x=>Object.assign({},x)):[],invest:Array.isArray(v.invest)?v.invest.map(x=>Object.assign({},x)):[]};}
+      else if(doc.id==="deposits"){next.deposits={travel:Array.isArray(v.travel)?v.travel.map(x=>Object.assign({},x)):[],gift:Array.isArray(v.gift)?v.gift.map(x=>Object.assign({},x)):[],invest:Array.isArray(v.invest)?v.invest.map(x=>Object.assign({},x)):[],nohu:Array.isArray(v.nohu)?v.nohu.map(x=>Object.assign({},x)):[]};}
       else if(doc.id==="journal"&&Array.isArray(v.items)){next.journal=v.items.map(x=>Object.assign({},x));}
       else if(doc.id==="grocery"&&Array.isArray(v.items)){next.grocery=v.items.filter(x=>x&&x.k).map(x=>Object.assign({},x));}
       else if(doc.id==="reserve"&&Array.isArray(v.items)){next.reserve=v.items.map(x=>Object.assign({},x));}
@@ -892,7 +898,8 @@ function computed(){const t=dKey(new Date());let b=START,tr=0,next=null;
   FUND_CREDITS.forEach(c=>{if(c[0]<=t){tr+=c[1];g+=c[2];}});return{b,tr,g,inv,next};}
 function renderQuest(){
   const comp=computed();
-  const bal=comp.b, pct=Math.min(100,bal/TARGET*100);
+  const nohuDeps=(state.deposits&&state.deposits.nohu)||[];
+  const bal=START+sum(nohuDeps), pct=Math.min(100,bal/TARGET*100);
   const lv=Math.floor(bal/LEVEL_STEP);
   $("lvNum").textContent=lv;
   $("balTxt").textContent=eur(bal);
@@ -903,8 +910,13 @@ function renderQuest(){
   const nextAt=(lv+1)*LEVEL_STEP;
   if(bal>=TARGET){$("nextLvTxt").textContent="MAX";$("nextLvLbl").textContent="đã phá đảo";}
   else{const goal=Math.min(nextAt,TARGET);$("nextLvTxt").textContent=eur(goal-bal);$("nextLvLbl").textContent=nextAt>TARGET?"nữa là về đích":"nữa lên Lv "+(lv+1);}
-  if(comp.next){const nd=parseD(comp.next[0]);$("projTxt").textContent="+"+eur(comp.next[1]);$("projLbl").textContent="tự cộng ngày "+pad(nd.getDate())+"/"+pad(nd.getMonth()+1)+"/"+nd.getFullYear();}
-  else{$("projTxt").textContent=eur(bal);$("projLbl").textContent="đã cộng đủ 5 tháng";}
+  $("projTxt").textContent=eur(comp.b);
+  if(comp.next){const nd=parseD(comp.next[0]);$("projLbl").textContent="kế hoạch đến nay · tiếp +"+eur(comp.next[1])+" ngày "+pad(nd.getDate())+"/"+pad(nd.getMonth()+1);}
+  else{$("projLbl").textContent="kế hoạch đến nay (đã đủ 5 tháng)";}
+  { const items=[...nohuDeps].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+    $("nohuLog").innerHTML=items.map(x=>{const d=parseD(x.date),dk="nohu:"+x.id;
+      return '<div class="item"><div class="ic" style="background:#2EE6C5">+</div><div class="t"><b class="num">'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+'</b><span>bỏ vào NỔ HŨ</span></div>'+
+        '<div class="r"><span class="amt num">'+eur(x.amount)+'</span><button class="btn '+(armedD===dk?"danger":"ghost")+' sm" type="button" data-ddel="'+esc(dk)+'">'+(armedD===dk?"Xoá thật?":"Xoá")+'</button></div></div>';}).join(""); }
   let seen=null;try{seen=parseFloat(localStorage.getItem("vqat-seen"));}catch(e){}
   if(seen!=null&&!isNaN(seen)&&bal>seen){const up=Math.floor(bal/LEVEL_STEP)>Math.floor(seen/LEVEL_STEP);
     setTimeout(()=>{toast(bal>=TARGET?"Phá đảo! Đủ tiền về quê ăn Tết":up?"LEVEL UP! Lên Lv "+Math.floor(bal/LEVEL_STEP):"+"+eur(bal-seen)+" vào tiết kiệm");if(up&&bal<TARGET)fireworks(2);},600);}
@@ -1052,15 +1064,15 @@ function persistDeposits(){
   saveLocal();
   if(mode!=="db")return;
   const clean=a=>(a||[]).map(x=>({id:x.id,amount:x.amount,date:x.date}));
-  const body={travel:clean(state.deposits.travel),gift:clean(state.deposits.gift),invest:clean(state.deposits.invest)};
+  const body={travel:clean(state.deposits.travel),gift:clean(state.deposits.gift),invest:clean(state.deposits.invest),nohu:clean(state.deposits.nohu)};
   enqueue("deposits",()=>db.collection("data/users/"+uid).doc("deposits").set(body));
 }
 document.querySelectorAll(".dep-form").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();
-  const key=f.dataset.fund, fund={trav:"travel",gift:"gift",inv:"invest"}[key], inp=$(key+"Dep");
+  const key=f.dataset.fund, fund={trav:"travel",gift:"gift",inv:"invest",nohu:"nohu"}[key], inp=$(key+"Dep");
   const amt=Math.round(parseFloat(String(inp.value).replace(",","."))*100)/100;
   if(!(amt>0)){toast("Nhập số tiền lớn hơn 0 €");inp.focus();return;}
-  (state.deposits[fund]=state.deposits[fund]||[]).push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),amount:amt,date:mKey(new Date())+"-01"});
-  persistDeposits();inp.value="";renderQuest();toast("+"+eur(amt)+" vào "+({travel:"quỹ du lịch",gift:"quỹ quà cáp",invest:"quỹ đầu tư"}[fund]));}));
+  (state.deposits[fund]=state.deposits[fund]||[]).push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),amount:amt,date:fund==="nohu"?dKey(new Date()):mKey(new Date())+"-01"});
+  persistDeposits();inp.value="";renderQuest();toast("+"+eur(amt)+" vào "+({travel:"quỹ du lịch",gift:"quỹ quà cáp",invest:"quỹ đầu tư",nohu:"NỔ HŨ"}[fund]));}));
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ddel]");if(!b)return;const dk=b.dataset.ddel;
   if(armedD!==dk){armedD=dk;clearTimeout(armDTimer);armDTimer=setTimeout(()=>{armedD=null;renderQuest();},3500);renderQuest();return;}
   armedD=null;const[fund,id]=dk.split(":");state.deposits[fund]=(state.deposits[fund]||[]).filter(x=>x.id!==id);persistDeposits();renderQuest();toast("Đã xoá");});
@@ -1285,7 +1297,7 @@ $("impFile").addEventListener("change",e=>{
         months[mk]=o.months[mk].filter(x=>x&&+x.amount>0&&CAT[x.cat]&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,cat:x.cat,date:x.date,note:String(x.note||"").slice(0,80)}));n+=months[mk].length;}
       const reserve=Array.isArray(o.reserve)?o.reserve.filter(x=>x&&+x.amount>0).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,date:String(x.date||dKey(new Date())),note:String(x.note||"").slice(0,80)})):[];
       const dep=a=>Array.isArray(a)?a.filter(x=>x&&+x.amount>0).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),amount:+x.amount,date:String(x.date||dKey(new Date()))})):[];
-      const deposits={travel:dep(o.deposits&&o.deposits.travel),gift:dep(o.deposits&&o.deposits.gift),invest:dep(o.deposits&&o.deposits.invest)};
+      const deposits={travel:dep(o.deposits&&o.deposits.travel),gift:dep(o.deposits&&o.deposits.gift),invest:dep(o.deposits&&o.deposits.invest),nohu:dep(o.deposits&&o.deposits.nohu)};
       const grocery=Array.isArray(o.grocery)?o.grocery.filter(x=>x&&GMAP[x.k]).map(x=>({k:x.k,qty:Math.max(1,parseInt(x.qty,10)||1),price:x.price==null?null:+x.price})):[];
       const journal=Array.isArray(o.journal)?o.journal.filter(x=>x&&x.text).map(x=>({id:String(x.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)),date:String(x.date||dKey(new Date())),text:String(x.text).slice(0,400)})):[];
       pending={settings:{balance:+o.settings.balance||0,travel:+o.settings.travel||0},months,reserve,deposits,grocery,journal};
