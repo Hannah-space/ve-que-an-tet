@@ -539,9 +539,9 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
       <div class="xp-stats">
         <div class="stat"><b class="num" id="missTxt">2 490,00 €</b><span>còn thiếu</span></div>
         <div class="stat"><b class="num" id="nextLvTxt">500,00 €</b><span id="nextLvLbl">nữa lên Lv 4</span></div>
-        <div class="stat"><b class="num" id="projTxt">+404,00 €</b><span id="projLbl">kế hoạch đến nay</span></div>
+        <div class="stat"><b class="num" id="projTxt">+375,00 €</b><span id="projLbl">kế hoạch đến nay</span></div>
       </div>
-      <p class="note" style="font-size:13px">Số lớn ở trên là tiền <b>thực tế</b>: 1 300 € ban đầu cộng các lần Hannah ghi bên dưới. Kế hoạch: +404 € vào cuối mỗi tháng, từ 10/2026 đến 02/2027.</p>
+      <p class="note" style="font-size:13px">Số lớn ở trên là tiền <b>thực tế</b>: 1 300 € ban đầu cộng các lần Hannah ghi bên dưới. Kế hoạch: +375 € vào cuối mỗi tháng, từ 10/2026 đến 02/2027.</p>
       <form class="dep-form" data-fund="nohu" novalidate>
         <label class="sr" for="nohuDep">Số tiền thực tế bỏ vào NỔ HŨ</label>
         <div class="money"><input id="nohuDep" type="number" step="0.01" min="0" inputmode="decimal" placeholder="Tiền bỏ vào NỔ HŨ"></div>
@@ -639,7 +639,7 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
 
   <!-- MONTHLY BUDGET -->
   <section class="card">
-    <h2>Ngân sách mỗi tháng <span class="label" style="margin-left:auto">Thu nhập 1 470,00 €</span></h2>
+    <h2>Ngân sách mỗi tháng <span class="label" style="margin-left:auto">Thu nhập 1 340,00 €</span></h2>
     <div class="strip" id="strip"></div>
     <div class="legend" id="stripLegend"></div>
     <div class="editing-note" id="stripWarn" style="margin-top:12px;background:var(--red);color:var(--ink)" hidden></div>
@@ -751,21 +751,21 @@ footer{text-shadow:0 1px 6px rgba(13,6,35,.9)}
 <use href="#sym-rtree" x="10" y="30" width="80" height="116" style=""/><use href="#sym-ltree" x="95" y="50" width="62" height="100" style=""/><use href="#sym-mush" x="160" y="108" width="34" height="36" style="color:#FF4D6D"/><use href="#sym-flower" x="198" y="100" width="18" height="40" style="color:#FF9ACB"/><use href="#sym-rtree" x="225" y="46" width="64" height="94" style=""/><use href="#sym-flower" x="292" y="106" width="16" height="36" style="color:#FFE08A"/><use href="#sym-mush" x="310" y="96" width="46" height="50" style="color:#B57BFF"/><use href="#sym-ltree" x="372" y="60" width="52" height="86" style=""/><use href="#sym-flower" x="430" y="104" width="16" height="36" style="color:#7FA8FF"/><use href="#sym-mush" x="452" y="116" width="26" height="28" style="color:#FFB547"/><use href="#sym-house" x="490" y="24" width="118" height="126" style=""/><use href="#sym-flower" x="612" y="102" width="18" height="40" style="color:#FF6FB5"/><use href="#sym-rtree" x="636" y="40" width="70" height="104" style=""/><use href="#sym-mush" x="708" y="104" width="38" height="40" style="color:#FF4D6D"/><use href="#sym-ltree" x="752" y="48" width="62" height="100" style=""/><use href="#sym-flower" x="818" y="100" width="18" height="40" style="color:#FFD23F"/><use href="#sym-mush" x="842" y="112" width="28" height="30" style="color:#B57BFF"/><use href="#sym-rtree" x="876" y="30" width="84" height="120" style=""/><use href="#sym-flower" x="960" y="104" width="16" height="36" style="color:#FF9ACB"/>
     </svg>
   </div>
-  <footer>1 300 € (1 500 € để dành từ 07/2026, đã rút 200 € sang Quỹ đầu tư) + 404 €/tháng từ 10/2026 đến 02/2027 = 3 320 €.</footer>
+  <footer>1 300 € (1 500 € để dành từ 07/2026, đã rút 200 € sang Quỹ đầu tư) + 375 €/tháng từ 10/2026 đến 02/2027 = 3 175 € (mục tiêu 3 320 €).</footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
 "use strict";
-const TARGET=3320, START=1300, MONTHLY=404, LEVEL_STEP=500;
+const TARGET=3320, START=1300, MONTHLY=375, LEVEL_STEP=500;
 const PLAN_END_Y=2027, PLAN_END_M=1; // Feb 2027 (0-based month)
 const TRAVEL_TARGET=400, TRAVEL_MONTHLY=80;
-const INCOME=1470, PERSONAL=240;
+const INCOME=1340, PERSONAL=240;
 const NEED=["ansang","sieuthi","antrua"], PERS=["muasam","nhahang","thethao","quacap","dulich","khac"];
 const TET=new Date(2027,2,5);
 const BUDGET=[
-  ["Tiền nhà",502,"#8F7BEA"],["Tiết kiệm",404,"#2EE6C5"],["Gửi mẹ",155,"#FF6FB5"],["Quỹ du lịch",60,"#7FA8FF"],
+  ["Tiền nhà",502,"#8F7BEA"],["Tiết kiệm",375,"#2EE6C5"],["Gửi mẹ",150,"#FF6FB5"],["Quỹ du lịch",60,"#7FA8FF"],
   ["Đi lại",26,"#C9B8FF"],["Quỹ quà cáp",25,"#FF9ACB"],["Đầu tư CCQ",20,"#FFD23F"],["Claude",18,"#D97757"],["Tiền điện thoại",15,"#7FE3F0"],["Chi tiêu (cần thiết + cá nhân)",240,"#FFD23F"]
 ];
 const CATS=[
@@ -907,7 +907,7 @@ function monthsLeft(now){ // months from current through Feb 2027 inclusive
 
 /* ---------------- render: quest ---------------- */
 let celebrated=false;
-const CREDITS=[["2026-10-31",404,60,25],["2026-11-30",404,60,25],["2026-12-31",404,60,25],["2027-01-31",404,60,25],["2027-02-28",404,60,25]];
+const CREDITS=[["2026-10-31",375,60,25],["2026-11-30",375,60,25],["2026-12-31",375,60,25],["2027-01-31",375,60,25],["2027-02-28",375,60,25]];
 const FUND_CREDITS=[["2026-10-01",60,25],["2026-11-01",60,25],["2026-12-01",60,25],["2027-01-01",60,25],["2027-02-01",60,25]];
 function computed(){const t=dKey(new Date());let b=START,tr=0,next=null;
   let g=GIFT_FUND,inv=200;CREDITS.forEach(c=>{if(c[0]<=t){b+=c[1];inv+=20;}else if(!next)next=c;});
